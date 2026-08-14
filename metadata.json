@@ -1,0 +1,6 @@
+{
+  "name": "Arizona Basin Monitor — Prototype",
+  "description": "Interactive prototype for exploring how verified groundwater-basin data could be compared across Arizona. Current values are demonstrations only.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
