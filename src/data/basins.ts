@@ -45,7 +45,10 @@ const generateHistory = (
     const recharge = baseRecharge * (1 - droughtFactor * 0.3);
 
     // Some noise
-    const decline = yearlyDeclineAvg + (Math.random() - 0.5) * volatility + ((withdrawal - recharge) / 1000000);
+    // Stable pseudo-noise keeps the showroom charts repeatable on every load.
+    const wave = Math.sin((year + startDepth) * 12.9898) * 43758.5453;
+    const stableNoise = wave - Math.floor(wave);
+    const decline = yearlyDeclineAvg + (stableNoise - 0.5) * volatility + ((withdrawal - recharge) / 1000000);
     depth += decline;
 
     // Prevent negative depth (above ground)
