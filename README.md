@@ -1,3 +1,5 @@
+![Arizona Basin Monitor banner](docs/assets/arizona-basin-monitor-banner.png)
+
 # Arizona Basin Monitor
 
 > An interactive prototype for exploring how verified groundwater-basin data could be compared across Arizona.
