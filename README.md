@@ -1,73 +1,129 @@
 ![Arizona Basin Monitor banner](docs/assets/arizona-basin-monitor-banner.png)
 
-# Arizona Basin Monitor
+## What is this?
 
-> An interactive prototype for exploring how verified groundwater-basin data could be compared across Arizona.
+Arizona Basin Monitor is a searchable operations console for 23 monitored groundwater areas in Arizona. It combines current management classifications, official basin boundaries, source coverage, dated well readings, and single-well measurement histories in one interface.
 
-Arizona Basin Monitor is a React dashboard concept covering 23 Arizona groundwater basins. It pairs a selectable state map and searchable basin directory with compact views for management status, water sources, depletion indicators, and historical trends.
+The monitor keeps the difference between a basin and a monitoring well visible. When no comparable basin-wide source exists for deficit, depletion, recharge, withdrawal, storage, or supply mix, the field stays **Unavailable** instead of being estimated.
 
-**Every quantitative value in this release is synthetic or unverified demonstration data.** The interface is public so people can inspect the design and code—not so the displayed numbers can be cited, repeated, or used for policy, research, reporting, or personal decisions.
+![Arizona Basin Monitor console showing the basin directory, official state map, source log, and well history](docs/screenshots/arizona-basin-monitor-console-overview.png)
 
-![Arizona Basin Monitor overview](docs/screenshots/arizona-basin-monitor-overview.png)
+_The console uses official ADWR geometry and source-linked USGS well observations._
 
-*The statewide interface with its permanent demonstration-data warning.*
+---
 
-![Arizona Basin Monitor basin detail](docs/screenshots/arizona-basin-monitor-basin-detail.png)
+## Who is this for?
 
-*A selected-basin view. The displayed metrics and chart are placeholders, not measured conditions.*
+- **People checking what public groundwater records say about an Arizona basin.** Find an area, inspect the available reading, and follow it back to the monitoring location.
+- **Communities comparing management status and reporting coverage.** See which monitored areas are AMAs, INAs, or other groundwater basins and where current observations are available.
+- **Reporters, students, researchers, and developers who need the source beside the number.** Export the snapshot without losing observation dates, site IDs, or source links.
 
-## What the prototype demonstrates
+![Arizona Basin Monitor directory filtered to Hualapai Valley INA with its local watchlist control](docs/screenshots/arizona-basin-monitor-basin-directory.png)
 
-- A single place to scan and select 23 Arizona basin entries.
-- A visual distinction between Active Management Areas, Irrigation Non-Expansion Areas, and other basin groupings.
-- A compact comparison pattern for annual deficit, depth change, estimated depletion, and source mix.
-- Searchable navigation that works alongside the map rather than depending on map familiarity.
-- Reserved spaces for future audio, interactive explanations, and data stories once verified material exists.
+_Search, sort, select, and keep a browser-local watchlist without creating an account._
 
-## What it does not provide
+---
 
-- Real-time monitoring or telemetry.
-- Verified deficit, decline, capacity, depletion, or source-share figures.
-- A complete or authoritative classification of every Arizona groundwater basin.
-- Legal, scientific, regulatory, or policy guidance.
-- Working Gemini, NotebookLM, audio, simulation, or slideshow features.
+## What it actually does
 
-The historical series is generated at runtime with `Math.sin()` and `Math.random()`. The scalar metrics and water-source percentages are hand-entered placeholders. See [Data status and replacement plan](docs/DATA_STATUS.md) for the exact boundary.
+1. **Search and sort 23 monitored areas.** Use the directory or select an area from the map.
+2. **Load official basin geometry.** The map requests the current ADWR Groundwater Basin 2025 layer directly rather than bundling hand-drawn boundaries.
+3. **Show current management classifications.** The registry includes eight Active Management Areas, three Irrigation Non-Expansion Areas, and twelve additional groundwater basins.
+4. **Display dated groundwater observations where available.** Each reading is identified as one well measurement—not a basin average.
+5. **Plot a real single-well history.** The chart uses the USGS monitoring location with the most qualifying field measurements in the area since 2010 and names that site above the chart.
+6. **Leave unsupported basin metrics unavailable.** The interface does not fabricate a statewide severity score, deficit, depletion percentage, supply mix, or recharge series.
+7. **Keep a local watchlist and export CSV.** Watchlist choices stay in browser storage, and exported records retain source and observation fields.
 
-## Why this is separate from Project Save Arizona
+The `Current`, `Dated`, `Stale`, and `No data` labels describe only the age of the newest bundled well observation: up to 30 days, 31–365 days, more than 365 days, or no qualifying reading. They are calculated by this project from source dates. They are not ADWR management designations, groundwater-risk ratings, or basin-wide trend judgments.
 
-This repository is the standalone statewide dashboard prototype. The earlier `Project-Save-Arizona` repository is a separate static resource-center archive with county pages and a national resource-map experiment. The newer `save-mohave-water` workspace embeds this same dashboard code under `dashboard/` and pairs it with a focused Mohave County advocacy site.
+---
 
-In that lineage:
+## Where the data comes from
 
-```text
-Project Save Arizona archive
-    └── broad static resource-center experiment
+Arizona Basin Monitor uses primary government sources:
 
-Arizona Basin Monitor (this repository)
-    └── statewide dashboard prototype / future hub
+- [ADWR Groundwater Basin 2025](https://azwatermaps.azwater.gov/arcgis/rest/services/Groundwater_Basin_2025/FeatureServer/0) for official basin names, classifications, and geometry.
+- [ADWR Active Management Area overview](https://www.azwater.gov/ama/active-management-area-overview) for the current statewide AMA framework.
+- [ADWR Hualapai Valley INA](https://www.azwater.gov/ama/ina/hualapai-ina) for the current court-stay notice: the designation order and irrigation restrictions remain in force while appellate review is pending.
+- [ADWR Groundwater Site Inventory](https://services.arcgis.com/C34zQ7veRS0V1t04/ArcGIS/rest/services/GWSI_Layers/FeatureServer) for aggregate monitoring-site coverage.
+- [USGS Water Data APIs](https://api.waterdata.usgs.gov/docs/ogcapi/) for depth-below-land-surface observations and field-measurement histories.
+- [ADWR Supply and Demand](https://www.azwater.gov/supply-demand) is linked as a reference for agency basin studies and water budgets where they exist. Those records are not ingested into the monitor or treated as a uniform daily feed.
 
-Save Mohave Water workspace
-    ├── focused Mohave County advocacy site / spoke
-    └── embedded copy of Arizona Basin Monitor / hub prototype
-```
+The bundled snapshot records three different times separately: when a well was observed, when a source responded, and when this project checked it. The scheduled workflow checks endpoint availability, schema, and the exact eight-AMA/three-INA managed-area set once per day. It builds a snapshot candidate and compares only source-backed fields, so a new check timestamp alone is not reported as a data change. It does not turn annual reports or irregular measurements into daily data, and it does not publish changes automatically.
 
-The dashboard is published separately because it is a coherent portfolio artifact on its own. The broader archives remain separate context, not duplicate releases.
+The refresh script uses official ADWR geometry transiently to spatially join observations, then stores only derived map centers and aggregate site counts. Raw ADWR geometries and site records are not copied into the repository. Displayed numeric observations come from USGS.
 
-## Run locally
+![Arizona Basin Monitor report with the official classification, observation details, source links, and unavailable-data boundary](docs/screenshots/arizona-basin-monitor-source-details.png)
 
-Requirements: Node.js 18 or newer and npm.
+_Every displayed reading links to its monitoring location; missing basin-wide metrics remain unavailable._
+
+---
+
+## Try it yourself
+
+The reviewed interface can be run locally with no account or API key. Search for Hualapai Valley, switch between Overview, Flows & Sources, and Basin Report, move through available years, add the area to the watchlist, and export the current snapshot. The public URL is not promoted here until this replacement interface is deployed.
+
+---
+
+## Running it locally
+
+### What you will need
+
+- [Node.js](https://nodejs.org/) 20 or newer.
+- npm, included with Node.js.
+- Network access for the official ADWR map and source-refresh commands. The bundled observation snapshot still renders when a refresh is not running.
+
+### Run it locally
 
 ```bash
 git clone https://github.com/anitacigawet/Water_Dashboard.git
 cd Water_Dashboard
-npm install
+npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`.
+Open <http://127.0.0.1:3000>.
 
-## Development checks
+For a production build:
+
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## ⚙️ Extreme technicals below
+
+### Data ingestion and daily checks
+
+```bash
+npm run data:refresh
+npm run data:validate
+npm run sources:check
+```
+
+`data:refresh` rebuilds the compact, source-linked snapshot from current ADWR geometry and USGS observations. `data:validate` checks the exact stored schema, registry counts, source fields, observation dates, and the no-raw-ADWR-storage boundary. `sources:check` validates the ADWR basin, subbasin, and GWSI services, exact managed-area classifications, USGS OGC schema, and qualifier values, then writes a health report under `artifacts/`. It also attempts scoped ADWR status-page checks; because those pages may reject automated requests, that narrative check is advisory and legal-status changes require manual review.
+
+The [daily GitHub Actions workflow](.github/workflows/check-primary-sources.yml) has read-only repository permissions. It uploads the health report and refreshed snapshot candidate as 14-day artifacts and performs no commit, deployment, issue creation, or automatic publication.
+
+### How the repository is organized
+
+- **`src/App.jsx`** — console state, keyboard navigation, watchlist, source-aware report, and CSV export.
+- **`src/hydro/registry.js`** — the curated 23-area registry and official source endpoints.
+- **`src/hydro/generated/groundwater-snapshot.json`** — compact derived snapshot generated from checked sources.
+- **`src/hydro/components/`** — official-geometry map, directory, charts, source rail, and timeline.
+- **`src/hydro.css`** — the intentional HYDRO/AZ console visual system.
+- **`scripts/refresh-water-data.mjs`** — source fetch, schema validation, spatial join, and snapshot generation.
+- **`scripts/compare-snapshots.mjs`** — semantic comparison that ignores check-only timestamps while retaining observation, coverage, classification, and data-state changes.
+- **`scripts/validate-data.mjs`** — registry, observation, provenance, and storage-boundary assertions.
+- **`scripts/check-primary-sources.mjs`** — read-only primary-source availability and schema audit.
+- **`scripts/verify-console.mjs`** — browser verification for geometry, search, report, watchlist, CSV, themes, and unexpected browser or request failures.
+- **`scripts/capture-screenshots.mjs`** — reproducible README screenshots.
+
+See [Data status](docs/DATA_STATUS.md) for the exact field boundary and update semantics.
+
+### Testing and maintenance
 
 ```bash
 npm run lint
@@ -75,24 +131,29 @@ npm run build
 npm audit --omit=dev
 ```
 
-## Project structure
+With the development server running:
 
-```text
-src/App.tsx                  Dashboard layout and selection state
-src/components/ArizonaMap.tsx
-src/components/TrendChart.tsx
-src/components/WaterSourcesChart.tsx
-src/data/basins.ts           23 basin records; all quantitative data is placeholder
-docs/DATA_STATUS.md          Verification boundary and replacement plan
-scripts/capture-screenshots.mjs
+```bash
+npm run verify
+npm run screenshots
 ```
 
-## Contributions and maintenance
+The browser verifier requires the ADWR geometry request to succeed. It checks all 23 directory rows, the Hualapai report path, watchlist persistence, CSV export, theme controls, unsupported-claim removal, browser errors, and request failures.
 
-Suggestions, accessibility improvements, data-pipeline proposals, and focused pull requests are welcome. Do not submit replacement metrics without authoritative sources, units, dates, methodology, and enough provenance for an independent reviewer to reproduce the value. This is a portfolio project maintained as interest allows; no response or implementation is guaranteed. See [CONTRIBUTING.md](CONTRIBUTING.md).
+ADWR publishes a [GIS data disclaimer](https://www.azwater.gov/gis-data-and-maps). This repository does not grant reuse rights to ADWR or USGS material; review the source terms before redistributing derived data outside this project.
 
-## License
+### Contributing and maintenance
 
-Copyright 2026 ScootSolute LLC.
+Open an issue before submitting a large change. Any new quantitative value must include its primary source, unit, geographic definition, observation or reporting period, retrieval date, and derivation method. A missing value stays unavailable; zero is reserved for a source-reported zero.
 
-The source is available under the [PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use is not granted. This is source-available software, not open-source software as defined by the Open Source Initiative. External data sources, when added, retain their own terms and attribution requirements.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full process.
+
+### Credits
+
+Arizona Basin Monitor is directed and maintained by James with assistance from generative AI development tools.
+
+The Arizona Department of Water Resources and U.S. Geological Survey publish the source material used by the monitor. Their inclusion does not imply endorsement, and their data retain their own terms and attribution requirements.
+
+### License
+
+Arizona Basin Monitor is available under the [PolyForm Noncommercial License 1.0.0](LICENSE). Noncommercial use, modification, and redistribution are permitted under that license; commercial use is not granted.

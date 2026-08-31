@@ -1,6 +1,6 @@
 {
-  "name": "Arizona Basin Monitor — Prototype",
-  "description": "Interactive prototype for exploring how verified groundwater-basin data could be compared across Arizona. Current values are demonstrations only.",
+  "name": "Arizona Basin Monitor",
+  "description": "An Arizona groundwater console with official basin boundaries and dated, source-linked well observations.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

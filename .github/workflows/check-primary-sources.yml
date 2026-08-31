@@ -1,0 +1,76 @@
+name: Check primary sources
+
+on:
+  schedule:
+    # GitHub schedules use UTC. 14:17 UTC is 07:17 in Arizona year-round.
+    - cron: '17 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: primary-source-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Validate official source health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check source availability and schema
+        run: node scripts/check-primary-sources.mjs
+        env:
+          PRIMARY_SOURCE_REPORT_PATH: artifacts/primary-source-health.json
+
+      - name: Preserve repository snapshot for comparison
+        run: cp src/hydro/generated/groundwater-snapshot.json artifacts/repository-groundwater-snapshot.json
+
+      - name: Build refreshed snapshot candidate
+        run: node scripts/refresh-water-data.mjs
+
+      - name: Validate refreshed snapshot candidate
+        run: node scripts/validate-data.mjs
+
+      - name: Compare source-backed candidate fields
+        id: compare
+        run: node scripts/compare-snapshots.mjs artifacts/repository-groundwater-snapshot.json src/hydro/generated/groundwater-snapshot.json
+
+      - name: Summarize candidate comparison
+        shell: bash
+        run: |
+          if [ "${{ steps.compare.outputs.changed }}" = "false" ]; then
+            echo "## Groundwater snapshot" >> "$GITHUB_STEP_SUMMARY"
+            echo "No source-backed snapshot change detected." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Groundwater snapshot" >> "$GITHUB_STEP_SUMMARY"
+            echo "A changed snapshot candidate is attached for review. Nothing was committed or published." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload source-health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: primary-source-health-${{ github.run_id }}
+          path: artifacts/primary-source-health.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload refreshed snapshot candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: groundwater-snapshot-candidate-${{ github.run_id }}
+          path: src/hydro/generated/groundwater-snapshot.json
+          if-no-files-found: error
+          retention-days: 14

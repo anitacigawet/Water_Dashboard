@@ -1,10 +1,10 @@
 # Contributing to Arizona Basin Monitor
 
-Contributions that improve clarity, accessibility, responsive behavior, testing, or the future data-verification workflow are welcome.
+Contributions that improve clarity, accessibility, responsive behavior, testing, or the source-verification workflow are welcome.
 
 ## Data contributions
 
-Do not replace a placeholder with a plausible-looking number. Each proposed metric must include:
+Do not add a plausible-looking number without a complete source trail. Each proposed metric must include:
 
 - the authoritative source and direct source location;
 - the measurement date or reporting period;
@@ -22,8 +22,10 @@ Keep changes focused and run:
 ```bash
 npm run lint
 npm run build
+npm run data:validate
+npm run sources:check
 ```
 
-User-facing language must continue to distinguish verified observations from estimates, generated examples, and planned features.
+User-facing language must continue to distinguish individual well observations, basin-wide measures, unavailable fields, and planned features.
 
 This is a portfolio project maintained as interest allows. Issues and pull requests may be discussed, declined, or left open, and no support or response time is promised. Contributions are licensed under the repository's [PolyForm Noncommercial License 1.0.0](LICENSE).

@@ -2,7 +2,7 @@
   "name": "az-basin-monitor",
   "private": true,
   "version": "1.0.0",
-  "description": "An interactive prototype for exploring how verified groundwater-basin data could be compared across Arizona.",
+  "description": "An Arizona groundwater console with official basin boundaries and dated, source-linked well observations.",
   "type": "module",
   "license": "PolyForm-Noncommercial-1.0.0",
   "repository": {
@@ -17,26 +17,26 @@
     "build": "vite build",
     "preview": "vite preview --host=127.0.0.1",
     "lint": "tsc --noEmit",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "verify": "node scripts/verify-console.mjs",
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "data:refresh": "node scripts/refresh-water-data.mjs",
+    "data:compare": "node scripts/compare-snapshots.mjs",
+    "data:validate": "node scripts/validate-data.mjs",
+    "sources:check": "node scripts/check-primary-sources.mjs"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "recharts": "^3.8.1",
-    "tailwind-merge": "^3.5.0"
+    "react-dom": "^19.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.14",
     "@types/node": "^22.14.0",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^5.0.4",
-    "autoprefixer": "^10.4.21",
     "playwright": "^1.62.1",
-    "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
     "vite": "^6.4.3"
   }
