@@ -61,6 +61,7 @@ Run:
 npm run data:refresh
 npm run data:validate
 npm run sources:check
+npm run sources:daily
 ```
 
 `data:refresh` validates all 23 registry names against official ADWR geometry, spatially joins source observations, selects representative single-well histories, and writes `src/hydro/generated/groundwater-snapshot.json`.
@@ -76,7 +77,9 @@ npm run sources:check
 
 The basin-layer check also requires exact set equality for the eight AMA and three INA names and abbreviations. A missing, added, or reclassified managed area fails the required check. The checker attempts additional narrative-page confirmations, including Hualapai's pending-appeal notice, but reports those as advisory when ADWR blocks automated page requests. It never reclassifies a basin from narrative text automatically.
 
-The scheduled workflow runs that health check and builds a refreshed snapshot candidate once per day with read-only repository permissions. Its semantic comparison ignores retrieval-only timestamps but retains source record counts, observations, coverage, classifications, and age-based data-state changes. It uploads the small aggregate report and candidate snapshot for review; it does not commit, deploy, open issues, or publish changed data automatically.
+The local daily runner obtains a single-run lock, runs that health check, and builds a refreshed snapshot candidate under the ignored `artifacts/` directory. Its semantic comparison ignores retrieval-only timestamps but retains source record counts, observations, coverage, classifications, and age-based data-state changes. The runner records candidate and baseline hashes so a later apply step cannot overwrite a snapshot that changed after validation. It does not edit tracked data, commit, push, deploy, open issues, or publish changed data automatically.
+
+`npm run data:apply-candidate` is a separate promotion gate. It accepts only a changed candidate with no required-source failure or manual-review flag, and only while both the candidate and tracked baseline still match the hashes in the latest report. Validation and build checks must run again after promotion.
 
 ## Source and storage policy
 

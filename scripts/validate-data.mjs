@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 
-import snapshot from '../src/hydro/generated/groundwater-snapshot.json' with { type: 'json' };
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import process from 'node:process';
 import { BASIN_REGISTRY } from '../src/hydro/registry.js';
+
+const SNAPSHOT_PATH = resolve(
+  process.cwd(),
+  process.argv[2] || process.env.WATER_SNAPSHOT_PATH || 'src/hydro/generated/groundwater-snapshot.json',
+);
+const snapshot = JSON.parse(await readFile(SNAPSHOT_PATH, 'utf8'));
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -109,5 +117,6 @@ for (const registryEntry of BASIN_REGISTRY) {
 }
 
 console.log('Data validation passed');
+console.log(`- file: ${SNAPSHOT_PATH}`);
 console.log('- registry: 23 unique monitored areas (8 AMA, 3 INA, 12 Basin)');
 console.log('- snapshot: 23 records, valid source-linked observations, no raw ADWR geometry');

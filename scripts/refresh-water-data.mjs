@@ -4,7 +4,9 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { BASIN_REGISTRY, ADWR_BASIN_GEOJSON_URL } from '../src/hydro/registry.js';
 
-const OUTPUT_PATH = resolve('src/hydro/generated/groundwater-snapshot.json');
+const OUTPUT_PATH = resolve(
+  process.env.WATER_SNAPSHOT_OUTPUT_PATH || 'src/hydro/generated/groundwater-snapshot.json',
+);
 const WINDOW_START = '2010-01-01';
 const PARAMETER_CODE = '72019';
 const ADWR_GWSI_URL =

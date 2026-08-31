@@ -49,7 +49,7 @@ Arizona Basin Monitor uses primary government sources:
 - [USGS Water Data APIs](https://api.waterdata.usgs.gov/docs/ogcapi/) for depth-below-land-surface observations and field-measurement histories.
 - [ADWR Supply and Demand](https://www.azwater.gov/supply-demand) is linked as a reference for agency basin studies and water budgets where they exist. Those records are not ingested into the monitor or treated as a uniform daily feed.
 
-The bundled snapshot records three different times separately: when a well was observed, when a source responded, and when this project checked it. The scheduled workflow checks endpoint availability, schema, and the exact eight-AMA/three-INA managed-area set once per day. It builds a snapshot candidate and compares only source-backed fields, so a new check timestamp alone is not reported as a data change. It does not turn annual reports or irregular measurements into daily data, and it does not publish changes automatically.
+The bundled snapshot records three different times separately: when a well was observed, when a source responded, and when this project checked it. A local daily source check validates endpoint availability, schema, and the exact eight-AMA/three-INA managed-area set. It builds an ignored snapshot candidate and compares only source-backed fields, so a new check timestamp alone is not reported as a data change. It does not turn annual reports or irregular measurements into daily data, and it does not publish changes automatically.
 
 The refresh script uses official ADWR geometry transiently to spatially join observations, then stores only derived map centers and aggregate site counts. Raw ADWR geometries and site records are not copied into the repository. Displayed numeric observations come from USGS.
 
@@ -101,11 +101,14 @@ npm run preview
 npm run data:refresh
 npm run data:validate
 npm run sources:check
+npm run sources:daily
 ```
 
 `data:refresh` rebuilds the compact, source-linked snapshot from current ADWR geometry and USGS observations. `data:validate` checks the exact stored schema, registry counts, source fields, observation dates, and the no-raw-ADWR-storage boundary. `sources:check` validates the ADWR basin, subbasin, and GWSI services, exact managed-area classifications, USGS OGC schema, and qualifier values, then writes a health report under `artifacts/`. It also attempts scoped ADWR status-page checks; because those pages may reject automated requests, that narrative check is advisory and legal-status changes require manual review.
 
-The [daily GitHub Actions workflow](.github/workflows/check-primary-sources.yml) has read-only repository permissions. It uploads the health report and refreshed snapshot candidate as 14-day artifacts and performs no commit, deployment, issue creation, or automatic publication.
+`sources:daily` is the safe local automation entry point. It obtains a single-run lock, checks every required source, generates and validates an ignored candidate under `artifacts/`, and writes `artifacts/daily-source-check.json`. Required-source failures, unexpected narrative changes, schema changes, a modified baseline, or a changed candidate all fail closed. The separate `npm run data:apply-candidate` command will apply only the exact candidate approved by the latest successful report. The scheduled check does not edit tracked data, commit, push, deploy, or require GitHub Actions.
+
+The authoritative records remain structured JSON, not an AI knowledge base. If the project later needs a durable history of runs and field changes, SQLite is the next storage layer. A vector index would be secondary search infrastructure for a large report library—not the authority for published measurements or classifications. See [Local source automation](docs/LOCAL_AUTOMATION.md) for the operating boundary.
 
 ### How the repository is organized
 
@@ -116,6 +119,9 @@ The [daily GitHub Actions workflow](.github/workflows/check-primary-sources.yml)
 - **`src/hydro.css`** — the intentional HYDRO/AZ console visual system.
 - **`scripts/refresh-water-data.mjs`** — source fetch, schema validation, spatial join, and snapshot generation.
 - **`scripts/compare-snapshots.mjs`** — semantic comparison that ignores check-only timestamps while retaining observation, coverage, classification, and data-state changes.
+- **`scripts/daily-source-check.mjs`** — locked local check, candidate generation, validation, and review report.
+- **`scripts/apply-snapshot-candidate.mjs`** — hash- and baseline-guarded promotion of a reviewed candidate.
+- **`scripts/lib/snapshot-semantics.mjs`** — shared definition of a source-backed snapshot change.
 - **`scripts/validate-data.mjs`** — registry, observation, provenance, and storage-boundary assertions.
 - **`scripts/check-primary-sources.mjs`** — read-only primary-source availability and schema audit.
 - **`scripts/verify-console.mjs`** — browser verification for geometry, search, report, watchlist, CSV, themes, and unexpected browser or request failures.
