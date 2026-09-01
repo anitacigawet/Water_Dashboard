@@ -183,4 +183,4 @@ function ArizonaMap({ basins, selectedId, onSelect, hoverId, setHoverId, theme }
   );
 }
 
-export { ArizonaMap, MAP_W, MAP_H };
+export { ArizonaMap };

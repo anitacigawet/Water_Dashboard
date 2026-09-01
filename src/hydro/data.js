@@ -37,5 +37,3 @@ export const SOURCE_LOG = snapshot.sources.map((source) => ({
   ...source,
   status: 'Checked',
 }));
-
-export const DATA_STATES = ['Current', 'Dated', 'Stale', 'No data'];

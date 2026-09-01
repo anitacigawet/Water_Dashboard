@@ -10,13 +10,6 @@ function fmtNum(value, digits = 0) {
   return n.toFixed(digits);
 }
 
-function fmtSigned(value, digits = 1) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '—';
-  const formatted = n.toFixed(digits);
-  return n > 0 ? `+${formatted}` : formatted;
-}
-
 function useResize(ref) {
   const [size, setSize] = React.useState({ w: 0, h: 0 });
   React.useLayoutEffect(() => {
@@ -180,4 +173,4 @@ function Sparkline({ history, w = 80, h = 18 }) {
   );
 }
 
-export { DepthChart, FlowChart, SourcesChart, Sparkline, UnavailablePanel, fmtNum, fmtSigned };
+export { DepthChart, FlowChart, SourcesChart, Sparkline, fmtNum };
