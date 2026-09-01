@@ -61,7 +61,7 @@ _Every displayed reading links to its monitoring location; missing basin-wide me
 
 ## Try it yourself
 
-The reviewed interface can be run locally with no account or API key. Search for Hualapai Valley, switch between Overview, Flows & Sources, and Basin Report, move through available years, add the area to the watchlist, and export the current snapshot. The public URL is not promoted here until this replacement interface is deployed.
+Open [water.scootsolute.org](https://water.scootsolute.org/) with no account or API key. Search for Hualapai Valley, switch between Overview, Flows & Sources, and Basin Report, move through available years, add the area to the watchlist, and export the current snapshot.
 
 ---
 
@@ -108,6 +108,8 @@ npm run sources:daily
 
 `sources:daily` is the safe local automation entry point. It obtains a single-run lock, checks every required source, generates and validates an ignored candidate under `artifacts/`, and writes `artifacts/daily-source-check.json`. Required-source failures, unexpected narrative changes, schema changes, a modified baseline, or a changed candidate all fail closed. The separate `npm run data:apply-candidate` command will apply only the exact candidate approved by the latest successful report. The scheduled check does not edit tracked data, commit, push, deploy, or require GitHub Actions.
 
+The maintainer's `npm run autopilot` command wraps that check with a narrower publication policy. An unchanged run only confirms that production is synchronized. An eligible source-backed snapshot change is applied, validated, built, committed to `main`, pushed, and deployed to the existing VPS showroom. Any other tracked diff, source failure, schema or managed-area change, narrative-status concern, divergent branch, deployment-helper mismatch, or failed production browser test stops the run without guessing.
+
 The authoritative records remain structured JSON, not an AI knowledge base. If the project later needs a durable history of runs and field changes, SQLite is the next storage layer. A vector index would be secondary search infrastructure for a large report library—not the authority for published measurements or classifications. See [Local source automation](docs/LOCAL_AUTOMATION.md) for the operating boundary.
 
 ### How the repository is organized
@@ -121,6 +123,9 @@ The authoritative records remain structured JSON, not an AI knowledge base. If t
 - **`scripts/compare-snapshots.mjs`** — semantic comparison that ignores check-only timestamps while retaining observation, coverage, classification, and data-state changes.
 - **`scripts/daily-source-check.mjs`** — locked local check, candidate generation, validation, and review report.
 - **`scripts/apply-snapshot-candidate.mjs`** — hash- and baseline-guarded promotion of a reviewed candidate.
+- **`scripts/autopilot-source-update.ps1`** — fail-closed local update, publication, and production-sync controller.
+- **`scripts/publish-water-showroom.ps1`** — verified build and water-only VPS publication wrapper.
+- **`scripts/deploy-water-showroom.sh`** — staged, rollback-preserving activation helper on the VPS.
 - **`scripts/lib/snapshot-semantics.mjs`** — shared definition of a source-backed snapshot change.
 - **`scripts/validate-data.mjs`** — registry, observation, provenance, and storage-boundary assertions.
 - **`scripts/check-primary-sources.mjs`** — read-only primary-source availability and schema audit.

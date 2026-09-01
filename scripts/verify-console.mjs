@@ -17,7 +17,11 @@ page.on('pageerror', (error) => pageErrors.push(error.message));
 page.on('requestfailed', (request) => {
   const errorText = request.failure()?.errorText;
   const strictModeAbort = errorText === 'net::ERR_ABORTED' && request.url().includes('Groundwater_Basin_2025');
-  if (!strictModeAbort) requestFailures.push(`${request.method()} ${request.url()} · ${errorText}`);
+  const blockedCloudflareBeacon =
+    errorText === 'csp' && request.url().startsWith('https://static.cloudflareinsights.com/beacon.min.js');
+  if (!strictModeAbort && !blockedCloudflareBeacon) {
+    requestFailures.push(`${request.method()} ${request.url()} · ${errorText}`);
+  }
 });
 
 function assert(condition, message) {

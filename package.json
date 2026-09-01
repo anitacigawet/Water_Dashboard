@@ -24,7 +24,8 @@
     "data:validate": "node scripts/validate-data.mjs",
     "data:apply-candidate": "node scripts/apply-snapshot-candidate.mjs",
     "sources:check": "node scripts/check-primary-sources.mjs",
-    "sources:daily": "node scripts/daily-source-check.mjs"
+    "sources:daily": "node scripts/daily-source-check.mjs",
+    "autopilot": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/autopilot-source-update.ps1"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
