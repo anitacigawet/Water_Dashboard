@@ -73,7 +73,7 @@ try {
     Invoke-Checked -Command npm.cmd -Arguments @('run', 'build')
 
     $changedFiles = Invoke-GitText -Arguments @('status', '--porcelain=v1')
-    if ($changedFiles -ne " M $snapshotPath") {
+    if ($changedFiles -ne "M $snapshotPath") {
       throw "Autopilot permits only an unstaged $snapshotPath change.`n$changedFiles"
     }
 
