@@ -43,7 +43,7 @@ This repository is a locally runnable copy of Arizona Basin Monitor. It does not
 
 ## Running locally
 
-You will need [Node.js](https://nodejs.org/) 20 or newer. npm is included with Node.js.
+You will need [Node.js](https://nodejs.org/) 20.19 or any later 20.x release, or Node.js 22.12 or newer. npm is included with Node.js.
 
 ```bash
 git clone https://github.com/anitacigawet/Water_Dashboard.git
