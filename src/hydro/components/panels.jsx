@@ -25,9 +25,7 @@ function KPI({ label, value, unit = null, sub = null, sev = null }) {
   );
 }
 
-function BasinDirectory({ basins, selectedId, onSelect, onInspect, query, setQuery, stateFilter, setStateFilter, inputRef }) {
-  const [sortKey, setSortKey] = React.useState('state');
-  const [sortDir, setSortDir] = React.useState(-1);
+function getVisibleBasins(basins, query, stateFilter, sortKey, sortDir) {
   const stateRank = { Current: 4, Dated: 3, Stale: 2, 'No data': 1 };
 
   const filtered = basins
@@ -42,7 +40,7 @@ function BasinDirectory({ basins, selectedId, onSelect, onInspect, query, setQue
     return basin.name;
   };
 
-  const sorted = [...filtered].sort((a, b) => {
+  return [...filtered].sort((a, b) => {
     const aValue = sortValue(a);
     const bValue = sortValue(b);
     if (aValue === null && bValue === null) return 0;
@@ -52,14 +50,9 @@ function BasinDirectory({ basins, selectedId, onSelect, onInspect, query, setQue
     if (aValue > bValue) return 1 * sortDir;
     return a.name.localeCompare(b.name);
   });
+}
 
-  const sortBy = (key) => {
-    if (key === sortKey) setSortDir((direction) => -direction);
-    else {
-      setSortKey(key);
-      setSortDir(-1);
-    }
-  };
+function BasinDirectory({ basins, totalCount, sortKey, sortDir, onSort, selectedId, onSelect, onInspect, query, setQuery, stateFilter, setStateFilter, inputRef }) {
   const indicator = (key) => sortKey === key ? (sortDir === -1 ? ' ▼' : ' ▲') : '';
 
   return (
@@ -83,16 +76,16 @@ function BasinDirectory({ basins, selectedId, onSelect, onInspect, query, setQue
         <table className="dense">
           <thead>
             <tr>
-              <th onClick={() => sortBy('name')} style={{ cursor: 'pointer' }}>AREA{indicator('name')}</th>
-              <th onClick={() => sortBy('type')} style={{ cursor: 'pointer' }}>TYPE{indicator('type')}</th>
-              <th onClick={() => sortBy('state')} style={{ cursor: 'pointer' }}>OBS AGE{indicator('state')}</th>
-              <th onClick={() => sortBy('date')} style={{ cursor: 'pointer' }}>OBS DATE{indicator('date')}</th>
-              <th className="num" onClick={() => sortBy('sites')} style={{ cursor: 'pointer', textAlign: 'right' }}>WELLS{indicator('sites')}</th>
+              <th onClick={() => onSort('name')} style={{ cursor: 'pointer' }}>AREA{indicator('name')}</th>
+              <th onClick={() => onSort('type')} style={{ cursor: 'pointer' }}>TYPE{indicator('type')}</th>
+              <th onClick={() => onSort('state')} style={{ cursor: 'pointer' }}>OBS AGE{indicator('state')}</th>
+              <th onClick={() => onSort('date')} style={{ cursor: 'pointer' }}>OBS DATE{indicator('date')}</th>
+              <th className="num" onClick={() => onSort('sites')} style={{ cursor: 'pointer', textAlign: 'right' }}>WELLS{indicator('sites')}</th>
               <th>TREND</th>
             </tr>
           </thead>
           <tbody>
-            {sorted.map((basin) => (
+            {basins.map((basin) => (
               <tr key={basin.id} className={selectedId === basin.id ? 'selected' : ''} onClick={() => onSelect(basin.id)}>
                 <td>
                   <span style={{ color: selectedId === basin.id ? 'var(--accent)' : 'var(--fg)', fontWeight: selectedId === basin.id ? 700 : 500 }}>
@@ -113,14 +106,14 @@ function BasinDirectory({ basins, selectedId, onSelect, onInspect, query, setQue
                 <td><Sparkline history={basin.history} /></td>
               </tr>
             ))}
-            {sorted.length === 0 && (
+            {basins.length === 0 && (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: 20, color: 'var(--fg-2)' }}>No matching monitored areas</td></tr>
             )}
           </tbody>
         </table>
       </div>
       <div style={{ padding: '4px 10px', borderTop: '1px solid var(--line)', fontSize: 10, color: 'var(--fg-2)', display: 'flex', justifyContent: 'space-between' }}>
-        <span>{sorted.length}/{basins.length} AREAS</span>
+        <span>{basins.length}/{totalCount} AREAS</span>
         <span>SORT: {sortKey.toUpperCase()} {sortDir === -1 ? 'DESC' : 'ASC'}</span>
       </div>
     </div>
@@ -213,4 +206,4 @@ function Scrubber({ minYear, maxYear, year, setYear, playing, setPlaying }) {
   );
 }
 
-export { DataStateDot, KPI, BasinDirectory, SourceRail, Scrubber };
+export { DataStateDot, KPI, getVisibleBasins, BasinDirectory, SourceRail, Scrubber };

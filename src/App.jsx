@@ -3,7 +3,7 @@ import { BASINS, SNAPSHOT_META, SOURCE_LOG } from './hydro/data.js';
 import { useTweaks, TweaksPanel, TweakSection, TweakRadio } from './hydro/tweaks-panel.jsx';
 import { ArizonaMap } from './hydro/components/map.jsx';
 import { DepthChart, FlowChart, SourcesChart, fmtNum } from './hydro/components/charts.jsx';
-import { BasinDirectory, DataStateDot, KPI, Scrubber, SourceRail } from './hydro/components/panels.jsx';
+import { BasinDirectory, DataStateDot, getVisibleBasins, KPI, Scrubber, SourceRail } from './hydro/components/panels.jsx';
 
 const TWEAK_DEFAULTS = {
   theme: 'dark',
@@ -53,9 +53,9 @@ function readWatchlist() {
   const validIds = new Set(BASINS.map((basin) => basin.id));
   try {
     const current = JSON.parse(window.localStorage.getItem(WATCHLIST_KEY) || 'null');
-    const legacy = JSON.parse(window.localStorage.getItem(LEGACY_WATCHLIST_KEY) || '[]');
-    const source = Array.isArray(current) ? current : Array.isArray(legacy) ? legacy : [];
-    return [...new Set(source.map((id) => LEGACY_IDS[id] || id).filter((id) => validIds.has(id)))];
+    const source = Array.isArray(current) ? current : JSON.parse(window.localStorage.getItem(LEGACY_WATCHLIST_KEY) || '[]');
+    const ids = Array.isArray(source) ? source : [];
+    return [...new Set(ids.map((id) => LEGACY_IDS[id] || id).filter((id) => validIds.has(id)))];
   } catch {
     return [];
   }
@@ -75,11 +75,13 @@ function App() {
   const [hoverId, setHoverId] = useState(null);
   const [query, setQuery] = useState('');
   const [stateFilter, setStateFilter] = useState('ALL');
+  const [directorySort, setDirectorySort] = useState({ key: 'state', direction: -1 });
   const [tab, setTab] = useState('overview');
   const [focusYear, setFocusYear] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [watchlistOnly, setWatchlistOnly] = useState(false);
   const [watchedIds, setWatchedIds] = useState(readWatchlist);
+  const watchlistChangedRef = useRef(false);
   const searchRef = useRef(null);
 
   const selected = useMemo(() => basins.find((basin) => basin.id === selectedId) || basins[0], [basins, selectedId]);
@@ -87,6 +89,19 @@ function App() {
     () => watchlistOnly ? basins.filter((basin) => watchedIds.includes(basin.id)) : basins,
     [basins, watchedIds, watchlistOnly],
   );
+  const visibleBasins = useMemo(
+    () => getVisibleBasins(directoryBasins, query, stateFilter, directorySort.key, directorySort.direction),
+    [directoryBasins, query, stateFilter, directorySort],
+  );
+
+  useEffect(() => {
+    // Only persist user changes, never a fallback returned by a failed startup read.
+    if (!watchlistChangedRef.current) return;
+    try {
+      window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchedIds));
+    } catch { /* Keep the session watchlist usable when browser storage is unavailable. */ }
+    if (watchedIds.length === 0) setWatchlistOnly(false);
+  }, [watchedIds]);
 
   const summary = useMemo(() => {
     const stateCounts = basins.reduce((counts, basin) => {
@@ -103,12 +118,12 @@ function App() {
   }, [basins]);
 
   const toggleWatched = (id) => {
-    setWatchedIds((current) => {
-      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
-      window.localStorage.setItem(WATCHLIST_KEY, JSON.stringify(next));
-      if (next.length === 0) setWatchlistOnly(false);
-      return next;
-    });
+    watchlistChangedRef.current = true;
+    setWatchedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  };
+
+  const sortDirectoryBy = (key) => {
+    setDirectorySort((current) => ({ key, direction: key === current.key ? -current.direction : -1 }));
   };
 
   const downloadCsv = () => {
@@ -151,15 +166,17 @@ function App() {
 
   useEffect(() => {
     const handler = (event) => {
+      if (event.defaultPrevented) return;
       if (document.activeElement?.tagName === 'INPUT' && !event.key.startsWith('F')) return;
-      if (event.key === 'ArrowDown' || event.key === 'j') {
+      if (['ArrowDown', 'j', 'ArrowUp', 'k'].includes(event.key)) {
         event.preventDefault();
-        const index = basins.findIndex((basin) => basin.id === selectedId);
-        setSelectedId(basins[(index + 1) % basins.length].id);
-      } else if (event.key === 'ArrowUp' || event.key === 'k') {
-        event.preventDefault();
-        const index = basins.findIndex((basin) => basin.id === selectedId);
-        setSelectedId(basins[(index - 1 + basins.length) % basins.length].id);
+        if (visibleBasins.length === 0) return;
+        const forward = event.key === 'ArrowDown' || event.key === 'j';
+        const index = visibleBasins.findIndex((basin) => basin.id === selectedId);
+        const nextIndex = index === -1
+          ? (forward ? 0 : visibleBasins.length - 1)
+          : (index + (forward ? 1 : -1) + visibleBasins.length) % visibleBasins.length;
+        setSelectedId(visibleBasins[nextIndex].id);
       } else if (event.key === '1' || event.key === 'F1') {
         event.preventDefault();
         setTab('overview');
@@ -182,7 +199,7 @@ function App() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [basins, selectedId, watchedIds]);
+  }, [visibleBasins, selectedId, watchedIds]);
 
   const clock = useClock();
   const latestYear = new Date(SNAPSHOT_META.generatedAt).getUTCFullYear();
@@ -221,7 +238,11 @@ function App() {
           <div className="panel" style={{ borderRight: 0, borderBottom: 0 }}>
             <div className="panel-head"><span className="tag">[F4]</span><span>BASIN DIRECTORY</span><span className="meta">{basins.length} MONITORED</span></div>
             <BasinDirectory
-              basins={directoryBasins}
+              basins={visibleBasins}
+              totalCount={directoryBasins.length}
+              sortKey={directorySort.key}
+              sortDir={directorySort.direction}
+              onSort={sortDirectoryBy}
               selectedId={selectedId}
               onSelect={setSelectedId}
               onInspect={(id) => { setSelectedId(id); setTab('report'); }}
@@ -254,7 +275,6 @@ function App() {
                 tab={tab}
                 chartType={chartType}
                 focusYear={focusYear}
-                setFocusYear={setFocusYear}
                 watched={watchedIds.includes(selected.id)}
                 onToggleWatched={() => toggleWatched(selected.id)}
               />
@@ -307,7 +327,7 @@ function App() {
   );
 }
 
-function BasinDetailPanel({ basin, tab, chartType, focusYear, setFocusYear, watched, onToggleWatched }) {
+function BasinDetailPanel({ basin, tab, chartType, focusYear, watched, onToggleWatched }) {
   const latest = basin.latestObservation;
   const fieldSites = basin.coverage.usgsFieldMeasurementSitesSince2010;
   const series = basin.representativeSeries;
@@ -335,7 +355,7 @@ function BasinDetailPanel({ basin, tab, chartType, focusYear, setFocusYear, watc
           <div className="panel-head" style={{ background: 'var(--bg-1)' }}>
             <span className="tag">▸</span><span>REPRESENTATIVE WELL · {series?.siteId || 'UNAVAILABLE'}</span><span className="meta">SINGLE WELL · NOT BASIN AVERAGE</span>
           </div>
-          <div style={{ flex: 1, minHeight: 0 }}><DepthChart basin={basin} type={chartType} focusYear={focusYear} onFocusYear={setFocusYear} /></div>
+          <div style={{ flex: 1, minHeight: 0 }}><DepthChart key={basin.id} basin={basin} type={chartType} focusYear={focusYear} /></div>
           <div className="panel-head" style={{ background: 'var(--bg-1)', borderTop: '1px solid var(--line)' }}><span className="tag">▸</span><span>SUPPLY MIX · SOURCE BOUNDARY</span></div>
           <div style={{ height: 152 }}><SourcesChart /></div>
         </>

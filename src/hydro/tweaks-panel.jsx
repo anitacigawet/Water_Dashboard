@@ -90,34 +90,73 @@ function TweakRow({ label, value, children, inline = false }) {
 
 function TweakRadio({ label, value, options, onChange }) {
   const trackRef = React.useRef(null);
+  const buttonRefs = React.useRef([]);
+  const dragCleanupRef = React.useRef(null);
   const [dragging, setDragging] = React.useState(false);
   const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
   const idx = Math.max(0, opts.findIndex((o) => o.value === value));
   const n = opts.length;
   const valueRef = React.useRef(value);
   valueRef.current = value;
+  React.useEffect(() => () => { dragCleanupRef.current?.(); }, []);
+  const select = (nextValue) => {
+    if (nextValue === valueRef.current) return;
+    valueRef.current = nextValue;
+    onChange(nextValue);
+  };
+  const onKeyDown = (e, i) => {
+    let next;
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': next = (i + 1) % n; break;
+      case 'ArrowLeft': case 'ArrowUp': next = (i - 1 + n) % n; break;
+      case 'Home': next = 0; break;
+      case 'End': next = n - 1; break;
+      default: return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    select(opts[next].value);
+    buttonRefs.current[next]?.focus();
+  };
   const segAt = (clientX) => {
     const r = trackRef.current.getBoundingClientRect();
     const i = Math.floor(((clientX - r.left - 2) / (r.width - 4)) * n);
     return opts[Math.max(0, Math.min(n - 1, i))].value;
   };
   const onPointerDown = (e) => {
+    if (e.button !== 0 || e.isPrimary === false) return;
+    dragCleanupRef.current?.();
+    const pointerId = e.pointerId;
     setDragging(true);
-    const v0 = segAt(e.clientX);
-    if (v0 !== valueRef.current) onChange(v0);
+    select(segAt(e.clientX));
     const move = (ev) => {
-      if (!trackRef.current) return;
-      const v = segAt(ev.clientX);
-      if (v !== valueRef.current) onChange(v);
+      if (ev.pointerId !== pointerId || !trackRef.current) return;
+      select(segAt(ev.clientX));
     };
-    const up = () => { setDragging(false); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    const up = (ev) => {
+      if (ev.pointerId !== pointerId) return;
+      setDragging(false);
+      cleanup();
+    };
+    const cleanup = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      dragCleanupRef.current = null;
+    };
+    dragCleanupRef.current = cleanup;
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
   };
   return (
-    <TweakRow label={label}><div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown} className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+    <TweakRow label={label}><div ref={trackRef} role="radiogroup" aria-label={label} onPointerDown={onPointerDown} className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
       <div className="twk-seg-thumb" style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`, width: `calc((100% - 4px) / ${n})` }} />
-      {opts.map((o) => <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>{o.label}</button>)}
+      {opts.map((o, i) => <button key={o.value} ref={(node) => { buttonRefs.current[i] = node; }} type="button" role="radio" aria-checked={o.value === value} tabIndex={i === idx ? 0 : -1} onKeyDown={(e) => onKeyDown(e, i)} onClick={(e) => {
+        // Native keyboard and assistive clicks have no pointer click count.
+        // Pointer selection is already handled by dragging and must not reset here.
+        if (e.detail === 0) select(o.value);
+      }}>{o.label}</button>)}
     </div></TweakRow>
   );
 }

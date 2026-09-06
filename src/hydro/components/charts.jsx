@@ -41,9 +41,11 @@ function UnavailablePanel({ title = 'UNAVAILABLE', children, link, linkLabel = '
   );
 }
 
-function DepthChart({ basin, type = 'area', focusYear, onFocusYear }) {
+function DepthChart({ basin, type = 'area', focusYear }) {
   const ref = React.useRef(null);
   const { w, h } = useResize(ref);
+  const [hoverTime, setHoverTime] = React.useState(null);
+  React.useEffect(() => { setHoverTime(null); }, [focusYear]);
   const data = (basin.history || [])
     .map((item) => ({ ...item, timeMs: Date.parse(item.time) }))
     .filter((item) => Number.isFinite(item.timeMs) && Number.isFinite(Number(item.depthToWaterFt)))
@@ -51,9 +53,11 @@ function DepthChart({ basin, type = 'area', focusYear, onFocusYear }) {
 
   if (data.length < 2) {
     return (
-      <UnavailablePanel title="NO VERIFIED SERIES" link="https://api.waterdata.usgs.gov/docs/ogcapi/">
-        No single USGS well in this monitored area has at least two static or unqualified field measurements in the bundled 2010–present window. The monitor does not generate a replacement curve.
-      </UnavailablePanel>
+      <div ref={ref} style={{ width: '100%', height: '100%' }}>
+        <UnavailablePanel title="NO VERIFIED SERIES" link="https://api.waterdata.usgs.gov/docs/ogcapi/">
+          No single USGS well in this monitored area has at least two static or unqualified field measurements in the bundled 2010–present window. The monitor does not generate a replacement curve.
+        </UnavailablePanel>
+      </div>
     );
   }
 
@@ -78,9 +82,10 @@ function DepthChart({ basin, type = 'area', focusYear, onFocusYear }) {
     const timeMs = xMin + xSpan * (index / 4);
     return { key: index, timeMs, label: new Date(timeMs).getUTCFullYear() };
   });
-  const focusRecord = focusYear === null || focusYear === undefined
+  const yearRecord = focusYear === null || focusYear === undefined
     ? null
     : [...data].reverse().find((item) => item.year === focusYear) || null;
+  const focusRecord = data.find((item) => item.time === hoverTime) || yearRecord;
 
   return (
     <div ref={ref} style={{ width: '100%', height: '100%' }}>
@@ -90,15 +95,16 @@ function DepthChart({ basin, type = 'area', focusYear, onFocusYear }) {
           height={h}
           style={{ display: 'block' }}
           onMouseMove={(event) => {
-            if (!onFocusYear || innerW <= 0) return;
+            if (innerW <= 0) return;
             const rect = event.currentTarget.getBoundingClientRect();
             const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left - margin.l) / innerW));
             const target = xMin + ratio * xSpan;
             const nearest = data.reduce((best, item) =>
               Math.abs(item.timeMs - target) < Math.abs(best.timeMs - target) ? item : best,
             );
-            onFocusYear(nearest.year);
+            setHoverTime(nearest.time);
           }}
+          onMouseLeave={() => setHoverTime(null)}
         >
           {yValues.map((value, index) => (
             <g key={`y-${index}`}>
