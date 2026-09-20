@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-19T14:17:35.324Z",
+  "generatedAt": "2026-09-20T14:15:33.563Z",
   "parameter": {
     "code": "72019",
     "name": "Depth below land surface",
@@ -20,7 +20,7 @@
       "agency": "Arizona Department of Water Resources",
       "title": "Groundwater Basin 2025",
       "url": "https://azwatermaps.azwater.gov/arcgis/rest/services/Groundwater_Basin_2025/FeatureServer/0",
-      "checkedAt": "2026-09-19T14:17:35.324Z",
+      "checkedAt": "2026-09-20T14:15:33.563Z",
       "recordsChecked": 52,
       "use": "Official names, classifications, geometry validation, and spatial joins"
     },
@@ -29,7 +29,7 @@
       "agency": "Arizona Department of Water Resources",
       "title": "Groundwater Site Inventory telemetry layer",
       "url": "https://services.arcgis.com/C34zQ7veRS0V1t04/ArcGIS/rest/services/GWSI_Layers/FeatureServer",
-      "checkedAt": "2026-09-19T14:17:35.324Z",
+      "checkedAt": "2026-09-20T14:15:33.563Z",
       "recordsChecked": 81,
       "use": "Aggregate monitoring-site coverage only; raw records are not stored"
     },
@@ -38,8 +38,8 @@
       "agency": "U.S. Geological Survey",
       "title": "Latest continuous groundwater depth observations",
       "url": "https://api.waterdata.usgs.gov/docs/ogcapi/",
-      "checkedAt": "2026-09-19T14:17:35.324Z",
-      "sourceResponseAt": "2026-09-19T14:17:34.648Z",
+      "checkedAt": "2026-09-20T14:15:33.563Z",
+      "sourceResponseAt": "2026-09-20T14:15:34.201Z",
       "recordsChecked": 123,
       "use": "Latest well-level observations where available"
     },
@@ -48,9 +48,9 @@
       "agency": "U.S. Geological Survey",
       "title": "Groundwater field measurements since 2010-01-01",
       "url": "https://api.waterdata.usgs.gov/docs/ogcapi/",
-      "checkedAt": "2026-09-19T14:17:35.324Z",
-      "sourceResponseAt": "2026-09-19T14:17:36.630Z",
-      "recordsChecked": 17472,
+      "checkedAt": "2026-09-20T14:15:33.563Z",
+      "sourceResponseAt": "2026-09-20T14:15:35.942Z",
+      "recordsChecked": 17467,
       "use": "Single-well historical series; never aggregated as a basin trend"
     }
   ],
@@ -2527,8 +2527,8 @@
       "dataState": "Current",
       "latestObservation": {
         "siteId": "USGS-312044110141901",
-        "time": "2026-09-19T13:30:00.000Z",
-        "depthToWaterFt": 38.4,
+        "time": "2026-09-20T13:30:00.000Z",
+        "depthToWaterFt": 38.39,
         "unit": "ft",
         "approvalStatus": "Provisional",
         "sourceKind": "continuous",
@@ -4477,8 +4477,8 @@
       "dataState": "Current",
       "latestObservation": {
         "siteId": "USGS-341408111212001",
-        "time": "2026-09-19T13:00:00.000Z",
-        "depthToWaterFt": 29.93,
+        "time": "2026-09-20T13:00:00.000Z",
+        "depthToWaterFt": 29.94,
         "unit": "ft",
         "approvalStatus": "Provisional",
         "sourceKind": "continuous",
@@ -6328,8 +6328,8 @@
       "dataState": "Current",
       "latestObservation": {
         "siteId": "USGS-345603110450301",
-        "time": "2026-09-19T13:45:00.000Z",
-        "depthToWaterFt": 267.36,
+        "time": "2026-09-20T13:45:00.000Z",
+        "depthToWaterFt": 267.39,
         "unit": "ft",
         "approvalStatus": "Provisional",
         "sourceKind": "continuous",
